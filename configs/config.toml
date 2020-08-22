@@ -1,0 +1,3 @@
+[service]
+port = 44148
+settingsPath = "./settings"

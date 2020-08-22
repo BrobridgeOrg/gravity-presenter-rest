@@ -1,0 +1,7 @@
+{
+	"method": "post",
+	"uri": "/v1/user/getPreTransferInfo",
+	"query": {
+		"phone": "body.ReqBody.MobilePhone"
+	}
+}
