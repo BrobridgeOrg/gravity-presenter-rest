@@ -15,10 +15,28 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type ViewData struct {
+	Records []map[string]interface{}
+}
+
 type EndpointConfig struct {
-	Method string `json:"method"`
-	Uri    string `json:"uri"`
-	Query  map[string]string
+	Method   string         `json:"method"`
+	Uri      string         `json:"uri"`
+	Query    QueryConfig    `json:"query"`
+	Response ResponseConfig `json:"response"`
+}
+
+type QueryConfig struct {
+	Conditions map[string]string `json:"conditions"`
+	Table      string            `json:"table"`
+	Limit      int64             `json:"limit"`
+	Offset     int64             `json:"offset"`
+	OrderBy    string            `json:"orderBy"`
+	Descending bool              `json:"descending"`
+}
+
+type ResponseConfig struct {
+	ContentType string `json:"contentType"`
 }
 
 type VariableType int
@@ -42,17 +60,21 @@ type Param struct {
 }
 
 type Endpoint struct {
-	name     string
-	template *template.Template
-	method   string
-	uri      string
-	params   map[string]Param
+	presenter *Presenter
+	name      string
+	template  *template.Template
+	method    string
+	uri       string
+	table     string
+	params    map[string]Param
+	response  *ResponseConfig
 }
 
-func NewEndpoint(name string) *Endpoint {
+func NewEndpoint(presenter *Presenter, name string) *Endpoint {
 	return &Endpoint{
-		name:   name,
-		params: make(map[string]Param),
+		presenter: presenter,
+		name:      name,
+		params:    make(map[string]Param),
 	}
 }
 
@@ -77,8 +99,14 @@ func (endpoint *Endpoint) Load(filename string) error {
 
 	endpoint.method = config.Method
 	endpoint.uri = config.Uri
+	endpoint.table = config.Query.Table
+	endpoint.response = &config.Response
 
-	for name, def := range config.Query {
+	if len(endpoint.response.ContentType) == 0 {
+		endpoint.response.ContentType = "application/json"
+	}
+
+	for name, def := range config.Query.Conditions {
 
 		// Split with dot
 		re := regexp.MustCompile(`\.`)
@@ -152,7 +180,7 @@ func (endpoint *Endpoint) handler(c *gin.Context) {
 		return
 	}
 
-	var parameters map[string]interface{}
+	parameters := make(map[string]interface{})
 
 	// Getting parameters
 	for name, param := range endpoint.params {
@@ -173,10 +201,36 @@ func (endpoint *Endpoint) handler(c *gin.Context) {
 		}
 	}
 
-	data := map[string]interface{}{
-		"accountType": "01",
-		"accountName": "TEST",
+	// Query
+	result, err := endpoint.presenter.queryAdapter.Query(endpoint.table, parameters, &QueryOption{})
+
+	if len(result.Records) == 0 {
+		// TODO
 	}
+
+	data := ViewData{
+		Records: make([]map[string]interface{}, 0),
+	}
+
+	for _, record := range result.Records {
+
+		row := make(map[string]interface{})
+
+		for _, field := range record.Fields {
+			row[field.Name] = GetValue(field.Value)
+		}
+
+		data.Records = append(data.Records, row)
+	}
+	/*
+		record := map[string]interface{}{
+			"accountType": "01",
+			"accountName": "TEST",
+		}
+
+		data.Records = append(data.Records, record)
+	*/
+	c.Writer.Header().Set("Content-Type", endpoint.response.ContentType)
 
 	endpoint.template.Execute(c.Writer, data)
 }

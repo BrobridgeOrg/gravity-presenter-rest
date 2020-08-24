@@ -1,8 +1,11 @@
 package presenter
 
 import (
+	"encoding/binary"
 	"strconv"
 	"strings"
+
+	querykit "github.com/BrobridgeOrg/gravity-api/service/querykit"
 )
 
 func getValueFromObject(obj interface{}, targetPath string) interface{} {
@@ -37,4 +40,23 @@ func getValueFromObject(obj interface{}, targetPath string) interface{} {
 	}
 
 	return cursor
+}
+
+func GetValue(value *querykit.Value) interface{} {
+
+	switch value.Type {
+	case querykit.DataType_FLOAT64:
+		return float64(binary.LittleEndian.Uint64(value.Value))
+	case querykit.DataType_INT64:
+		return int64(binary.LittleEndian.Uint64(value.Value))
+	case querykit.DataType_UINT64:
+		return uint64(binary.LittleEndian.Uint64(value.Value))
+	case querykit.DataType_BOOLEAN:
+		return int8(value.Value[0]) & 1
+	case querykit.DataType_STRING:
+		return string(value.Value)
+	}
+
+	// binary
+	return value.Value
 }

@@ -11,14 +11,16 @@ import (
 )
 
 type Presenter struct {
-	server    http_server.Server
-	endpoints map[string]*Endpoint
+	server       http_server.Server
+	endpoints    map[string]*Endpoint
+	queryAdapter *QueryAdapter
 }
 
 func NewPresenter(server http_server.Server) *Presenter {
 	return &Presenter{
-		server:    server,
-		endpoints: make(map[string]*Endpoint),
+		server:       server,
+		endpoints:    make(map[string]*Endpoint),
+		queryAdapter: NewQueryAdapter(),
 	}
 }
 
@@ -47,7 +49,7 @@ func (presenter *Presenter) Init() error {
 
 		// Create endpoint
 		endpointName := strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
-		endpoint := NewEndpoint(endpointName)
+		endpoint := NewEndpoint(presenter, endpointName)
 		if err := endpoint.Load(path); err != nil {
 			return err
 		}
@@ -61,6 +63,12 @@ func (presenter *Presenter) Init() error {
 		return nil
 	})
 
+	if err != nil {
+		return err
+	}
+
+	// Initialize query adapter
+	err = presenter.queryAdapter.Init()
 	if err != nil {
 		return err
 	}

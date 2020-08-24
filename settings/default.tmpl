@@ -2,7 +2,8 @@
 	"RCode": "4001",
 	"AccountInfo": {
 		"BankCode": "013",
-		"AccountType": "{{.accountType}}",
-		"AccountName": "{{.accountName}}",
+		"MobilePhone": "{{ (index .Records 0).phone }}",
+		"AccountType": "{{ (index .Records 0).type }}",
+		"AccountName": "{{ (index .Records 0).name }}"
 	}
 }

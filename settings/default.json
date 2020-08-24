@@ -2,6 +2,12 @@
 	"method": "post",
 	"uri": "/v1/user/getPreTransferInfo",
 	"query": {
-		"phone": "body.ReqBody.MobilePhone"
+		"table": "accounts",
+		"conditions": {
+			"phone": "body.ReqBody.MobilePhone"
+		}
+	},
+	"response": {
+		"contentType": "application/json"
 	}
 }
