@@ -26,13 +26,20 @@ func NewPresenter(server http_server.Server) *Presenter {
 
 func (presenter *Presenter) Init() error {
 
+	// Initialize query adapter
+	err := presenter.queryAdapter.Init()
+	if err != nil {
+		return err
+	}
+
+	// Initialize endpoints
 	settingsPath := viper.GetString("service.settingsPath")
 
 	log.WithFields(log.Fields{
 		"path": settingsPath,
 	}).Info("Loading settings")
 
-	err := filepath.Walk(settingsPath, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(settingsPath, func(path string, info os.FileInfo, err error) error {
 
 		// Ignore directory
 		if info.IsDir() {
@@ -54,7 +61,7 @@ func (presenter *Presenter) Init() error {
 			return err
 		}
 
-		if err := endpoint.Register(presenter.server); err != nil {
+		if err := endpoint.Register(); err != nil {
 			return err
 		}
 
@@ -63,12 +70,6 @@ func (presenter *Presenter) Init() error {
 		return nil
 	})
 
-	if err != nil {
-		return err
-	}
-
-	// Initialize query adapter
-	err = presenter.queryAdapter.Init()
 	if err != nil {
 		return err
 	}

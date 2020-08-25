@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/BrobridgeOrg/gravity-presenter-rest/pkg/http_server"
 	"github.com/gin-gonic/gin"
 )
 
@@ -153,17 +152,17 @@ func (endpoint *Endpoint) LoadTemplate(filename string) error {
 	return nil
 }
 
-func (endpoint *Endpoint) Register(server http_server.Server) error {
+func (endpoint *Endpoint) Register() error {
 
 	switch endpoint.method {
 	case "post":
-		server.GetEngine().POST(endpoint.uri, endpoint.handler)
+		endpoint.presenter.server.GetEngine().POST(endpoint.uri, endpoint.handler)
 	case "get":
-		server.GetEngine().GET(endpoint.uri, endpoint.handler)
+		endpoint.presenter.server.GetEngine().GET(endpoint.uri, endpoint.handler)
 	case "delete":
-		server.GetEngine().DELETE(endpoint.uri, endpoint.handler)
+		endpoint.presenter.server.GetEngine().DELETE(endpoint.uri, endpoint.handler)
 	case "put":
-		server.GetEngine().PUT(endpoint.uri, endpoint.handler)
+		endpoint.presenter.server.GetEngine().PUT(endpoint.uri, endpoint.handler)
 	}
 
 	return nil
