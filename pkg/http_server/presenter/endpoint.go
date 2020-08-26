@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/common/log"
 )
 
 type ViewData struct {
@@ -202,6 +203,12 @@ func (endpoint *Endpoint) handler(c *gin.Context) {
 
 	// Query
 	result, err := endpoint.presenter.queryAdapter.Query(endpoint.table, parameters, &QueryOption{})
+	if err != nil {
+		log.Error(err)
+		c.Status(http.StatusInternalServerError)
+		c.Abort()
+		return
+	}
 
 	if len(result.Records) == 0 {
 		// TODO
