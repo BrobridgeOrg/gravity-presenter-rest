@@ -1,0 +1,10 @@
+{
+	"method": "get",
+	"uri": "/records",
+	"query": {
+		"table": "accounts"
+	},
+	"response": {
+		"contentType": "text/html"
+	}
+}
