@@ -5,6 +5,10 @@
 		"table": "accounts"
 	},
 	"response": {
-		"contentType": "text/html"
+		"state": {
+			"success": {
+				"contentType": "text/html"
+			}
+		}
 	}
 }

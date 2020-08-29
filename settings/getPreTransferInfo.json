@@ -1,0 +1,24 @@
+{
+	"method": "post",
+	"uri": "/v1/user/getPreTransferInfo",
+	"query": {
+		"table": "accounts",
+		"conditions": {
+			"phone": "body.ReqBody.MobilePhone"
+		}
+	},
+	"response": {
+		"state": {
+			"no_results": {
+				"contentType": "application/json",
+				"code": 404,
+				"template": "getPreTransferInfo.no_results.tmpl"
+			},
+			"success": {
+				"contentType": "application/json",
+				"code": 200,
+				"template": "getPreTransferInfo.success.tmpl"
+			}
+		}
+	}
+}

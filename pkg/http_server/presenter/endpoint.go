@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/common/log"
@@ -36,7 +35,15 @@ type QueryConfig struct {
 }
 
 type ResponseConfig struct {
+	ContentType string                     `json:"contentType"`
+	State       map[string]StateDefinition `json:"state"`
+}
+
+type StateDefinition struct {
 	ContentType string `json:"contentType"`
+	Code        int    `json:"code"`
+	Template    string `json:"template"`
+	template    *template.Template
 }
 
 type VariableType int
@@ -53,6 +60,17 @@ var varTypes map[string]VariableType = map[string]VariableType{
 	"body":        VARIABLE_TYPE_BODY,
 }
 
+var defaultStates = map[string]StateDefinition{
+	"success": StateDefinition{
+		ContentType: "application/json",
+		Code:        200,
+	},
+	"no_results": StateDefinition{
+		ContentType: "application/json",
+		Code:        404,
+	},
+}
+
 type Param struct {
 	pType  VariableType
 	name   string
@@ -62,12 +80,14 @@ type Param struct {
 type Endpoint struct {
 	presenter *Presenter
 	name      string
+	dirPath   string
 	template  *template.Template
 	method    string
 	uri       string
 	table     string
 	params    map[string]Param
 	response  *ResponseConfig
+	states    map[string]*StateDefinition
 }
 
 func NewEndpoint(presenter *Presenter, name string) *Endpoint {
@@ -75,10 +95,14 @@ func NewEndpoint(presenter *Presenter, name string) *Endpoint {
 		presenter: presenter,
 		name:      name,
 		params:    make(map[string]Param),
+		states:    make(map[string]*StateDefinition),
 	}
 }
 
 func (endpoint *Endpoint) Load(filename string) error {
+
+	endpoint.dirPath = filepath.Dir(filename)
+	log.Info(endpoint.dirPath)
 
 	// Open and read file
 	jsonFile, err := os.Open(filename)
@@ -106,6 +130,7 @@ func (endpoint *Endpoint) Load(filename string) error {
 		endpoint.response.ContentType = "application/json"
 	}
 
+	// Preparing conditions for query
 	for name, def := range config.Query.Conditions {
 
 		// Split with dot
@@ -131,24 +156,56 @@ func (endpoint *Endpoint) Load(filename string) error {
 		endpoint.params[param.name] = param
 	}
 
-	// Load template
-	tmplFilename := strings.TrimSuffix(filename, filepath.Ext(filename)) + ".tmpl"
-	err = endpoint.LoadTemplate(tmplFilename)
+	// Initialize response definitions
+	err = endpoint.InitStates()
 	if err != nil {
 		return err
 	}
+	/*
+		tmplFilename := strings.TrimSuffix(filename, filepath.Ext(filename)) + ".tmpl"
+		err = endpoint.LoadTemplate(tmplFilename)
+		if err != nil {
+			return err
+		}
+	*/
 
 	return nil
 }
 
-func (endpoint *Endpoint) LoadTemplate(filename string) error {
+func (endpoint *Endpoint) InitStates() error {
 
-	t, err := template.ParseFiles(filename)
-	if err != nil {
-		return err
+	for stateName, defState := range defaultStates {
+
+		state, ok := endpoint.response.State[stateName]
+		if !ok {
+			state = defState
+		} else {
+
+			if state.Code == 0 {
+				state.Code = 200
+			}
+
+			if len(state.ContentType) == 0 {
+				state.ContentType = "application/json"
+			}
+		}
+
+		if len(state.Template) == 0 {
+			state.Template = filepath.Join(endpoint.dirPath, endpoint.name+".tmpl")
+		} else if string(state.Template[0]) != "/" {
+			state.Template = filepath.Join(endpoint.dirPath, state.Template)
+		}
+
+		// Load template
+		t, err := template.ParseFiles(state.Template)
+		if err != nil {
+			return err
+		}
+
+		state.template = t
+
+		endpoint.states[stateName] = &state
 	}
-
-	endpoint.template = t
 
 	return nil
 }
@@ -210,14 +267,21 @@ func (endpoint *Endpoint) handler(c *gin.Context) {
 		return
 	}
 
-	if len(result.Records) == 0 {
-		// TODO
-	}
-
 	data := ViewData{
-		Records: make([]map[string]interface{}, 0),
+		Records: make([]map[string]interface{}, 0, len(result.Records)),
 	}
 
+	if len(result.Records) == 0 {
+
+		// Render for no results
+		state := endpoint.states["no_results"]
+		c.Writer.Header().Set("Content-Type", state.ContentType)
+		c.Status(state.Code)
+		state.template.Execute(c.Writer, data)
+		return
+	}
+
+	// Prepare records
 	for _, record := range result.Records {
 
 		row := make(map[string]interface{})
@@ -228,15 +292,9 @@ func (endpoint *Endpoint) handler(c *gin.Context) {
 
 		data.Records = append(data.Records, row)
 	}
-	/*
-		record := map[string]interface{}{
-			"accountType": "01",
-			"accountName": "TEST",
-		}
 
-		data.Records = append(data.Records, record)
-	*/
-	c.Writer.Header().Set("Content-Type", endpoint.response.ContentType)
-
-	endpoint.template.Execute(c.Writer, data)
+	// Render
+	state := endpoint.states["success"]
+	c.Writer.Header().Set("Content-Type", state.ContentType)
+	state.template.Execute(c.Writer, data)
 }
