@@ -43,9 +43,6 @@ func (server *Server) Init(host string) error {
 	server.listener = lis
 	server.engine = gin.Default()
 
-	// APIs
-	//	api.NewAuth(server.app, server).Register()
-
 	// Initializing presenter
 	server.presenter = presenter.NewPresenter(server)
 	err = server.presenter.Init()
