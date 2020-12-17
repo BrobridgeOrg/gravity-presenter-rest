@@ -1,0 +1,14 @@
+{
+	"method": "get",
+	"uri": "/mongodb",
+	"query": {
+		"table": "accounts"
+	},
+	"response": {
+		"state": {
+			"success": {
+				"contentType": "text/html"
+			}
+		}
+	}
+}
