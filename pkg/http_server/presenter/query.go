@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/BrobridgeOrg/gravity-presenter-rest/pkg/http_server/presenter/pool"
-	"github.com/prometheus/common/log"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 
@@ -64,7 +64,47 @@ func (adapter *QueryAdapter) Init() error {
 	return nil
 }
 
-func (adapter *QueryAdapter) Query(table string, conditions map[string]interface{}, option *QueryOption) (*querykit.QueryReply, error) {
+func (adapter *QueryAdapter) prepareCondition(condition *Condition) (*querykit.Condition, error) {
+
+	v, err := adapter.getValue(condition.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	qCondition := &querykit.Condition{
+		Name:       condition.Name,
+		Value:      v,
+		Conditions: make([]*querykit.Condition, len(condition.Conditions)),
+	}
+
+	if condition.Operator == ">" {
+		qCondition.Operator = querykit.Operator_GREATER_THAN
+	} else if condition.Operator == ">=" {
+		qCondition.Operator = querykit.Operator_GREATER_EQUAL
+	} else if condition.Operator == "<" {
+		qCondition.Operator = querykit.Operator_LESS_THAN
+	} else if condition.Operator == "<=" {
+		qCondition.Operator = querykit.Operator_LESS_EQUAL
+	} else {
+		qCondition.Operator = querykit.Operator_EQUAL
+	}
+
+	/// Processing childs
+	for _, child := range condition.Conditions {
+		c, err := adapter.prepareCondition(child)
+		if err != nil {
+			return nil, err
+		}
+
+		qCondition.Conditions = append(qCondition.Conditions, c)
+	}
+
+	return qCondition, nil
+}
+
+//func (adapter *QueryAdapter) Query(table string, conditions map[string]interface{}, option *QueryOption) (*querykit.QueryReply, error) {
+//func (adapter *QueryAdapter) Query(table string, conditions []Condition, option *QueryOption) (*querykit.QueryReply, error) {
+func (adapter *QueryAdapter) Query(table string, condition *Condition, option *QueryOption) (*querykit.QueryReply, error) {
 
 	conn, err := adapter.pool.Get()
 	if err != nil {
@@ -83,21 +123,53 @@ func (adapter *QueryAdapter) Query(table string, conditions map[string]interface
 		Descending: option.Descending,
 	}
 
-	for name, value := range conditions {
-
-		// Convert value to protobuf format
-		v, err := adapter.getValue(value)
+	if condition != nil {
+		qCondition, err := adapter.prepareCondition(condition)
 		if err != nil {
-			log.Error(err)
-			continue
+			return nil, err
 		}
 
-		request.Conditions = append(request.Conditions, &querykit.Field{
-			Name:  name,
-			Value: v,
-		})
-
+		request.Condition = qCondition
 	}
+
+	/*
+		//	for name, value := range conditions {
+		for _, condition := range conditions {
+
+			// Convert value to protobuf format
+			//		v, err := adapter.getValue(value)
+			v, err := adapter.getValue(condition.Value)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+
+			//			request.Conditions = append(request.Conditions, &querykit.Condition{
+			//				Name:  name,
+			//				Value: v,
+			//			})
+
+			qCondition := &querykit.Condition{
+				Name:  condition.Name,
+				Value: v,
+			}
+
+			if condition.Operator == ">" {
+				qCondition.Operator = querykit.Operator_GREATER_THAN
+			} else if condition.Operator == ">=" {
+				qCondition.Operator = querykit.Operator_GREATER_EQUAL
+			} else if condition.Operator == "<" {
+				qCondition.Operator = querykit.Operator_LESS_THAN
+			} else if condition.Operator == "<=" {
+				qCondition.Operator = querykit.Operator_LESS_EQUAL
+			} else {
+				qCondition.Operator = querykit.Operator_EQUAL
+			}
+
+			request.Conditions = append(request.Conditions, qCondition)
+
+		}
+	*/
 
 	reply, err := client.Query(context.Background(), request)
 	if err != nil {

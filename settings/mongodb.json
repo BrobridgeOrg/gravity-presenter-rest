@@ -1,8 +1,13 @@
 {
 	"method": "get",
-	"uri": "/mongodb",
+	"uri": "/mongodb/:id",
 	"query": {
-		"table": "accounts"
+		"table": "accounts",
+		"condition": {
+			"operator": ">=",
+			"name": "_id",
+			"value": "parseInt(param.id)"
+		}
 	},
 	"response": {
 		"state": {

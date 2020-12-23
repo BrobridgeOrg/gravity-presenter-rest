@@ -2,16 +2,14 @@ package presenter
 
 import (
 	"encoding/json"
-	"errors"
 	"html/template"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/common/log"
+	log "github.com/sirupsen/logrus"
 )
 
 type ViewData struct {
@@ -26,12 +24,13 @@ type EndpointConfig struct {
 }
 
 type QueryConfig struct {
-	Conditions map[string]string `json:"conditions"`
-	Table      string            `json:"table"`
-	Limit      int64             `json:"limit"`
-	Offset     int64             `json:"offset"`
-	OrderBy    string            `json:"orderBy"`
-	Descending bool              `json:"descending"`
+	//	Conditions map[string]string `json:"conditions"`
+	Condition  *Condition `json:"condition"`
+	Table      string     `json:"table"`
+	Limit      int64      `json:"limit"`
+	Offset     int64      `json:"offset"`
+	OrderBy    string     `json:"orderBy"`
+	Descending bool       `json:"descending"`
 }
 
 type ResponseConfig struct {
@@ -72,9 +71,10 @@ var defaultStates = map[string]StateDefinition{
 }
 
 type Param struct {
-	pType  VariableType
-	name   string
-	source string
+	pType    VariableType
+	name     string
+	source   string
+	operator string
 }
 
 type Endpoint struct {
@@ -88,6 +88,7 @@ type Endpoint struct {
 	params    map[string]Param
 	response  *ResponseConfig
 	states    map[string]*StateDefinition
+	query     *QueryConfig
 }
 
 func NewEndpoint(presenter *Presenter, name string) *Endpoint {
@@ -99,10 +100,35 @@ func NewEndpoint(presenter *Presenter, name string) *Endpoint {
 	}
 }
 
+func (endpoint *Endpoint) loadCondition(queryConfig *QueryConfig, condition *Condition) error {
+
+	if condition == nil {
+		return nil
+	}
+
+	// Prepare value script
+	if condition.Value != nil {
+		condition.InitRuntime()
+	}
+
+	// Initializing child conditions
+	for _, c := range condition.Conditions {
+		return endpoint.loadCondition(queryConfig, c)
+	}
+
+	return nil
+}
+
+func (endpoint *Endpoint) loadQuerySettings(queryConfig *QueryConfig) error {
+
+	endpoint.query = queryConfig
+
+	return endpoint.loadCondition(queryConfig, queryConfig.Condition)
+}
+
 func (endpoint *Endpoint) Load(filename string) error {
 
 	endpoint.dirPath = filepath.Dir(filename)
-	log.Info(endpoint.dirPath)
 
 	// Open and read file
 	jsonFile, err := os.Open(filename)
@@ -130,30 +156,10 @@ func (endpoint *Endpoint) Load(filename string) error {
 		endpoint.response.ContentType = "application/json"
 	}
 
-	// Preparing conditions for query
-	for name, def := range config.Query.Conditions {
-
-		// Split with dot
-		re := regexp.MustCompile(`\.`)
-		parts := re.Split(def, 2)
-
-		if len(parts) != 2 {
-			return errors.New("Uncoganized query settings")
-		}
-
-		// First part is parameter type
-		pType, ok := varTypes[parts[0]]
-		if !ok {
-			return errors.New("No such parameter type for query")
-		}
-
-		param := Param{
-			pType:  pType,
-			name:   name,
-			source: parts[1],
-		}
-
-		endpoint.params[param.name] = param
+	// load condition settings
+	err = endpoint.loadQuerySettings(&config.Query)
+	if err != nil {
+		return err
 	}
 
 	// Initialize response definitions
@@ -178,7 +184,11 @@ func (endpoint *Endpoint) InitStates() error {
 
 		state, ok := endpoint.response.State[stateName]
 		if !ok {
-			state = defState
+			if s, ok := endpoint.response.State["success"]; ok {
+				state = s
+			} else {
+				state = defState
+			}
 		} else {
 
 			if state.Code == 0 {
@@ -226,40 +236,112 @@ func (endpoint *Endpoint) Register() error {
 	return nil
 }
 
+func (endpoint *Endpoint) prepareCondition(ctx *gin.Context, c *Condition) (*Condition, error) {
+
+	if c == nil {
+		if endpoint.query.Condition == nil {
+			return nil, nil
+		}
+
+		c = endpoint.query.Condition
+	}
+
+	// Prepare a new condition which is based on template
+	condition := &Condition{
+		Name:       c.Name,
+		Operator:   c.Operator,
+		Conditions: make([]*Condition, len(c.Conditions)),
+	}
+
+	condition.InitRuntime()
+
+	// Prepare environment variable for script
+	condition.Runtime.Set("query", ctx.Request.URL.Query())
+
+	// Path parameters
+	params := make(map[string]interface{}, len(ctx.Params))
+	//	params := condition.Runtime.NewObject()
+	for _, p := range ctx.Params {
+		//		params.Set(p.Key, p.Value)
+		params[p.Key] = p.Value
+	}
+
+	//condition.Runtime.Set("param", mapper.NewParamObject(params))
+	condition.Runtime.Set("param", params)
+
+	// Body
+	var body map[string]interface{}
+	err := ctx.ShouldBind(&body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Run script to get result
+	result, err := condition.Runtime.RunString(c.Value.(string))
+	if err != nil {
+		return nil, err
+	}
+
+	condition.Value = result.Export()
+
+	// Processing childs
+	for _, child := range c.Conditions {
+		sub, err := endpoint.prepareCondition(ctx, child)
+		if err != nil {
+			return nil, err
+		}
+
+		condition.Conditions = append(condition.Conditions, sub)
+	}
+
+	return condition, nil
+}
+
 func (endpoint *Endpoint) handler(c *gin.Context) {
 
-	// Parsing body
-	var body map[string]interface{}
-	err := c.ShouldBind(&body)
+	condition, err := endpoint.prepareCondition(c, nil)
 	if err != nil {
+		log.Error(err)
 		c.Status(http.StatusBadRequest)
 		c.Abort()
 		return
 	}
+	/*
+		conditions := make([]Condition, 0, len(endpoint.params))
+		//	parameters := make(map[string]interface{})
 
-	parameters := make(map[string]interface{})
+		// Getting parameters
+		for name, param := range endpoint.params {
 
-	// Getting parameters
-	for name, param := range endpoint.params {
-
-		switch param.pType {
-		case VARIABLE_TYPE_QUERYSTRING:
-			parameters[name] = c.Query(param.source)
-		case VARIABLE_TYPE_PARAMS:
-			parameters[name] = c.Param(param.source)
-		case VARIABLE_TYPE_BODY:
-			val := getValueFromObject(body, param.source)
-			if val == nil {
-				c.Status(http.StatusBadRequest)
-				c.Abort()
+			condition := Condition{
+				Name:     name,
+				Operator: param.operator,
 			}
 
-			parameters[name] = val
-		}
-	}
+			switch param.pType {
+			case VARIABLE_TYPE_QUERYSTRING:
+				condition.Value = c.Query(param.source)
+				//			parameters[name] = c.Query(param.source)
+			case VARIABLE_TYPE_PARAMS:
+				condition.Value = c.Param(param.source)
+				//			parameters[name] = c.Param(param.source)
+			case VARIABLE_TYPE_BODY:
+				val := getValueFromObject(body, param.source)
+				if val == nil {
+					c.Status(http.StatusBadRequest)
+					c.Abort()
+				}
 
+				//			parameters[name] = val
+				condition.Value = val
+			}
+
+			conditions = append(conditions, condition)
+		}
+	*/
 	// Query
-	result, err := endpoint.presenter.queryAdapter.Query(endpoint.table, parameters, &QueryOption{})
+	//	result, err := endpoint.presenter.queryAdapter.Query(endpoint.table, parameters, &QueryOption{})
+	result, err := endpoint.presenter.queryAdapter.Query(endpoint.table, condition, &QueryOption{})
 	if err != nil {
 		log.Error(err)
 		c.Status(http.StatusInternalServerError)

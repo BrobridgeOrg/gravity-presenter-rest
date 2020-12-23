@@ -17,6 +17,8 @@ github.com/BrobridgeOrg/gravity-api v0.0.0-20200816194343-a91dd0fa3335 h1:VwHeSE
 github.com/BrobridgeOrg/gravity-api v0.0.0-20200816194343-a91dd0fa3335/go.mod h1:ky6XIYg5h95Cy+QjRQaI6LQABmQfqAAn+SCgbygxWOA=
 github.com/BrobridgeOrg/gravity-api v0.0.0-20200824082319-fe8e34a23ab9 h1:1YUqfhTOcMgFxm4kcaVt0/H0I3nxvinp8r16+QDh1aI=
 github.com/BrobridgeOrg/gravity-api v0.0.0-20200824082319-fe8e34a23ab9/go.mod h1:ky6XIYg5h95Cy+QjRQaI6LQABmQfqAAn+SCgbygxWOA=
+github.com/BrobridgeOrg/gravity-api v0.2.8 h1:1TJlOK9vwIS8KJxgYF/AP3XmaAgQ0NxMj62MrcIOP8s=
+github.com/BrobridgeOrg/gravity-api v0.2.8/go.mod h1:ky6XIYg5h95Cy+QjRQaI6LQABmQfqAAn+SCgbygxWOA=
 github.com/BrobridgeOrg/gravity-exporter-nats v0.0.0-20200808204317-03f51c4b68f3/go.mod h1:Q4y4gWvA2C4ehM8KCVcxlLuc+UP8qOOi3j3c+oKZaUw=
 github.com/BrobridgeOrg/gravity-exporter-rest v0.0.0-20200808213905-40fa5031150c h1:DV60xhCaCiP8OXfTnDpMUONzEr+IdkuG4zKku65Al+w=
 github.com/BrobridgeOrg/gravity-exporter-rest v0.0.0-20200808213905-40fa5031150c/go.mod h1:r1csDrr67/eEEWVahW2y5znTTt2k/yIkwqO88p8Wgbc=
@@ -45,6 +47,9 @@ github.com/coreos/etcd v3.3.13+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc
 github.com/coreos/go-semver v0.3.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=
 github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
+github.com/d5/tengo v1.24.8 h1:PRJ+NWt7ae/9sSbIfThOBTkPSvNV+dwYoBAvwfNgNJY=
+github.com/d5/tengo/v2 v2.6.2 h1:AnPhA/Y5qrNLb5QSWHU9uXq25T3QTTdd2waTgsAHMdc=
+github.com/d5/tengo/v2 v2.6.2/go.mod h1:XRGjEs5I9jYIKTxly6HCF8oiiilk5E/RYXOZ5b0DZC8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -53,6 +58,10 @@ github.com/denisenkom/go-mssqldb v0.0.0-20191124224453-732737034ffd/go.mod h1:xb
 github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
+github.com/dlclark/regexp2 v1.4.0 h1:F1rxgk7p4uKjwIQxBs9oAXe5CqrXlCduYEJvrF4u93E=
+github.com/dlclark/regexp2 v1.4.0/go.mod h1:2pZnwuY/m+8K6iRw6wQdMtk+rH5tNGR1i55kozfMjCc=
+github.com/dop251/goja v0.0.0-20201221183957-6b6d5e2b5d80 h1:KJXPPsVVe0PC50I+a/dI8IYPvy+3iaXqnjiF19iuLxQ=
+github.com/dop251/goja v0.0.0-20201221183957-6b6d5e2b5d80/go.mod h1:Mw6PkjjMXWbTj+nnj4s3QPXq1jaT0s5pC0iFD4+BOAA=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1mIlRU8Am5FuJP05cCM98=
@@ -80,6 +89,9 @@ github.com/go-playground/universal-translator v0.17.0 h1:icxd5fm+REJzpZx7ZfpaD87
 github.com/go-playground/universal-translator v0.17.0/go.mod h1:UkSxE5sNxxRwHyU+Scu5vgOQjsIJAF8j9muTVoKLVtA=
 github.com/go-playground/validator/v10 v10.2.0 h1:KgJ0snyC2R9VXYN2rneOtQcw5aHQB1Vv0sFl1UcHBOY=
 github.com/go-playground/validator/v10 v10.2.0/go.mod h1:uOYAAleCW8F/7oMFd6aG0GOhaH6EGOAJShg8Id5JGkI=
+github.com/go-sourcemap/sourcemap v1.0.5 h1:oaGf6nqLxwhWPrW5jjNWUYM1SWqHIsJSFcPZojn23Mc=
+github.com/go-sourcemap/sourcemap v2.1.3+incompatible h1:W1iEw64niKVGogNgBN3ePyLFfuisuzeidWPMPWmECqU=
+github.com/go-sourcemap/sourcemap v2.1.3+incompatible/go.mod h1:F8jJfvm2KbVjc5NqelyYJmf/v5J0dwNLS2mL4sNA1Jg=
 github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
