@@ -17,7 +17,9 @@ First of all, you have to define API with the following settings:
 	"query": {
 		"table": "accounts",
 		"conditions": {
-			"phone": "body.ReqBody.MobilePhone"
+			"name": "phone",
+			"value": "body.ReqBody.MobilePhone",
+			"operator": "="
 		}
 	},
 	"response": {
