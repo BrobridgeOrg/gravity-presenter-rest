@@ -16,7 +16,7 @@ First of all, you have to define API with the following settings:
 	"uri": "/v1/user/getPreTransferInfo",
 	"query": {
 		"table": "accounts",
-		"conditions": {
+		"condition": {
 			"name": "phone",
 			"value": "body.ReqBody.MobilePhone",
 			"operator": "="
