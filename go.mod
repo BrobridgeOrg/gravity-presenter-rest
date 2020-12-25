@@ -3,7 +3,7 @@ module github.com/BrobridgeOrg/gravity-presenter-rest
 go 1.13
 
 require (
-	github.com/BrobridgeOrg/gravity-api v0.2.8
+	github.com/BrobridgeOrg/gravity-api v0.2.9
 	github.com/BrobridgeOrg/gravity-exporter-rest v0.0.0-20200808213905-40fa5031150c
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dlclark/regexp2 v1.4.0 // indirect

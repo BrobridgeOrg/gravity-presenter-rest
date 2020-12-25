@@ -2,7 +2,22 @@
 	"method": "get",
 	"uri": "/records",
 	"query": {
-		"table": "accounts"
+		"table": "accounts",
+		"condition": {
+			"operator": "||",
+			"conditions": [
+				{
+					"name": "name",
+					"value": "\"one\"",
+					"operator": "="
+				},
+				{
+					"name": "name",
+					"value": "\"two\"",
+					"operator": "="
+				}
+			]
+		}
 	},
 	"response": {
 		"state": {

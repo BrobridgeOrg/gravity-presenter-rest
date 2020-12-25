@@ -74,10 +74,14 @@ func (adapter *QueryAdapter) prepareCondition(condition *Condition) (*querykit.C
 	qCondition := &querykit.Condition{
 		Name:       condition.Name,
 		Value:      v,
-		Conditions: make([]*querykit.Condition, len(condition.Conditions)),
+		Conditions: make([]*querykit.Condition, 0, len(condition.Conditions)),
 	}
 
-	if condition.Operator == ">" {
+	if condition.Operator == "&&" {
+		qCondition.Operator = querykit.Operator_AND
+	} else if condition.Operator == "||" {
+		qCondition.Operator = querykit.Operator_OR
+	} else if condition.Operator == ">" {
 		qCondition.Operator = querykit.Operator_GREATER_THAN
 	} else if condition.Operator == ">=" {
 		qCondition.Operator = querykit.Operator_GREATER_EQUAL
@@ -89,7 +93,7 @@ func (adapter *QueryAdapter) prepareCondition(condition *Condition) (*querykit.C
 		qCondition.Operator = querykit.Operator_EQUAL
 	}
 
-	/// Processing childs
+	// Processing childs
 	for _, child := range condition.Conditions {
 		c, err := adapter.prepareCondition(child)
 		if err != nil {
@@ -102,8 +106,6 @@ func (adapter *QueryAdapter) prepareCondition(condition *Condition) (*querykit.C
 	return qCondition, nil
 }
 
-//func (adapter *QueryAdapter) Query(table string, conditions map[string]interface{}, option *QueryOption) (*querykit.QueryReply, error) {
-//func (adapter *QueryAdapter) Query(table string, conditions []Condition, option *QueryOption) (*querykit.QueryReply, error) {
 func (adapter *QueryAdapter) Query(table string, condition *Condition, option *QueryOption) (*querykit.QueryReply, error) {
 
 	conn, err := adapter.pool.Get()
@@ -182,7 +184,8 @@ func (adapter *QueryAdapter) Query(table string, condition *Condition, option *Q
 func (adapter *QueryAdapter) getValue(data interface{}) (*querykit.Value, error) {
 
 	if data == nil {
-		return nil, errors.New("data cannnot be nil")
+		return nil, nil
+		//		return nil, errors.New("data couldn't be nil")
 	}
 
 	// Float

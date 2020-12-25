@@ -250,7 +250,7 @@ func (endpoint *Endpoint) prepareCondition(ctx *gin.Context, c *Condition) (*Con
 	condition := &Condition{
 		Name:       c.Name,
 		Operator:   c.Operator,
-		Conditions: make([]*Condition, len(c.Conditions)),
+		Conditions: make([]*Condition, 0, len(c.Conditions)),
 	}
 
 	condition.InitRuntime()
@@ -277,12 +277,14 @@ func (endpoint *Endpoint) prepareCondition(ctx *gin.Context, c *Condition) (*Con
 	}
 
 	// Run script to get result
-	result, err := condition.Runtime.RunString(c.Value.(string))
-	if err != nil {
-		return nil, err
-	}
+	if c.Value != nil {
+		result, err := condition.Runtime.RunString(c.Value.(string))
+		if err != nil {
+			return nil, err
+		}
 
-	condition.Value = result.Export()
+		condition.Value = result.Export()
+	}
 
 	// Processing childs
 	for _, child := range c.Conditions {

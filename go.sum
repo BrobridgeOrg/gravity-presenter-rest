@@ -19,6 +19,8 @@ github.com/BrobridgeOrg/gravity-api v0.0.0-20200824082319-fe8e34a23ab9 h1:1YUqfh
 github.com/BrobridgeOrg/gravity-api v0.0.0-20200824082319-fe8e34a23ab9/go.mod h1:ky6XIYg5h95Cy+QjRQaI6LQABmQfqAAn+SCgbygxWOA=
 github.com/BrobridgeOrg/gravity-api v0.2.8 h1:1TJlOK9vwIS8KJxgYF/AP3XmaAgQ0NxMj62MrcIOP8s=
 github.com/BrobridgeOrg/gravity-api v0.2.8/go.mod h1:ky6XIYg5h95Cy+QjRQaI6LQABmQfqAAn+SCgbygxWOA=
+github.com/BrobridgeOrg/gravity-api v0.2.9 h1:6dWRsZ4g10LO3VqpOljwP1hmk1mOWUa8gkM1fiGpE6s=
+github.com/BrobridgeOrg/gravity-api v0.2.9/go.mod h1:ky6XIYg5h95Cy+QjRQaI6LQABmQfqAAn+SCgbygxWOA=
 github.com/BrobridgeOrg/gravity-exporter-nats v0.0.0-20200808204317-03f51c4b68f3/go.mod h1:Q4y4gWvA2C4ehM8KCVcxlLuc+UP8qOOi3j3c+oKZaUw=
 github.com/BrobridgeOrg/gravity-exporter-rest v0.0.0-20200808213905-40fa5031150c h1:DV60xhCaCiP8OXfTnDpMUONzEr+IdkuG4zKku65Al+w=
 github.com/BrobridgeOrg/gravity-exporter-rest v0.0.0-20200808213905-40fa5031150c/go.mod h1:r1csDrr67/eEEWVahW2y5znTTt2k/yIkwqO88p8Wgbc=
