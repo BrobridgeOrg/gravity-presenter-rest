@@ -2,6 +2,8 @@ package presenter
 
 import (
 	"encoding/binary"
+	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -46,7 +48,8 @@ func GetValue(value *querykit.Value) interface{} {
 
 	switch value.Type {
 	case querykit.DataType_FLOAT64:
-		return float64(binary.LittleEndian.Uint64(value.Value))
+		return fmt.Sprintf("%f", math.Float64frombits(binary.LittleEndian.Uint64(value.Value)))
+		//return math.Float64frombits(binary.LittleEndian.Uint64(value.Value))
 	case querykit.DataType_INT64:
 		return int64(binary.LittleEndian.Uint64(value.Value))
 	case querykit.DataType_UINT64:

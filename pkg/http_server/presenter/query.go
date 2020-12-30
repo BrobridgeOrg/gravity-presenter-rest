@@ -351,17 +351,20 @@ func (adapter *QueryAdapter) getBytesFromInteger(data interface{}) ([]byte, erro
 }
 
 func (adapter *QueryAdapter) getBytesFromFloat(data interface{}) ([]byte, error) {
-	var buf = make([]byte, 8)
+	//var buf = make([]byte, 8)
+	var buf bytes.Buffer
 
 	v := reflect.ValueOf(data)
 	switch v.Kind() {
 	case reflect.Float32:
-		binary.LittleEndian.PutUint64(buf, uint64(data.(float32)))
+		//binary.LittleEndian.PutUint64(buf, uint64(data.(float32)))
+		binary.Write(&buf, binary.LittleEndian, data)
 	case reflect.Float64:
-		binary.LittleEndian.PutUint64(buf, uint64(data.(float64)))
+		//binary.LittleEndian.PutUint64(buf, uint64(data.(float64)))
+		binary.Write(&buf, binary.LittleEndian, data)
 	default:
 		return nil, NotFloatErr
 	}
 
-	return buf, nil
+	return buf.Bytes(), nil
 }
