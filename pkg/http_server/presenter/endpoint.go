@@ -256,7 +256,12 @@ func (endpoint *Endpoint) prepareCondition(ctx *gin.Context, c *Condition) (*Con
 	condition.InitRuntime()
 
 	// Prepare environment variable for script
-	condition.Runtime.Set("query", ctx.Request.URL.Query())
+	querys := make(map[string]string, len(ctx.Request.URL.Query()))
+	for k, v := range ctx.Request.URL.Query() {
+		querys[k] = v[0]
+	}
+	//condition.Runtime.Set("query", ctx.Request.URL.Query())
+	condition.Runtime.Set("query", querys)
 
 	// Path parameters
 	params := make(map[string]interface{}, len(ctx.Params))
