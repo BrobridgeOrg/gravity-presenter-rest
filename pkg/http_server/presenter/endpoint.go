@@ -348,7 +348,15 @@ func (endpoint *Endpoint) handler(c *gin.Context) {
 	*/
 	// Query
 	//	result, err := endpoint.presenter.queryAdapter.Query(endpoint.table, parameters, &QueryOption{})
-	result, err := endpoint.presenter.queryAdapter.Query(endpoint.table, condition, &QueryOption{})
+
+	queryOption := QueryOption{
+		Limit:      endpoint.query.Limit,
+		Offset:     endpoint.query.Offset,
+		OrderBy:    endpoint.query.OrderBy,
+		Descending: endpoint.query.Descending,
+	}
+
+	result, err := endpoint.presenter.queryAdapter.Query(endpoint.table, condition, &queryOption)
 	if err != nil {
 		log.Error(err)
 		c.Status(http.StatusInternalServerError)
