@@ -3,6 +3,7 @@ package presenter
 import (
 	"encoding/json"
 	"html/template"
+	//"text/template"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -200,14 +201,23 @@ func (endpoint *Endpoint) InitStates() error {
 			}
 		}
 
+		tpName := ""
 		if len(state.Template) == 0 {
+			tpName = endpoint.name + ".tmpl"
 			state.Template = filepath.Join(endpoint.dirPath, endpoint.name+".tmpl")
 		} else if string(state.Template[0]) != "/" {
+			tpName = state.Template
 			state.Template = filepath.Join(endpoint.dirPath, state.Template)
 		}
 
 		// Load template
-		t, err := template.ParseFiles(state.Template)
+		tf := template.FuncMap{
+			"counter": func(i int) int {
+				return i + 1
+			},
+		}
+
+		t, err := template.New(tpName).Funcs(tf).ParseFiles(state.Template)
 		if err != nil {
 			return err
 		}
