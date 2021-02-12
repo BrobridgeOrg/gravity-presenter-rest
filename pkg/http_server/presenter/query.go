@@ -89,8 +89,12 @@ func (adapter *QueryAdapter) prepareCondition(condition *Condition) (*querykit.C
 		qCondition.Operator = querykit.Operator_LESS_THAN
 	} else if condition.Operator == "<=" {
 		qCondition.Operator = querykit.Operator_LESS_EQUAL
+	} else if condition.Operator == "!=" {
+		qCondition.Operator = querykit.Operator_NOT_EQUAL
+	} else if condition.Operator == "isExist" {
+		qCondition.Operator = querykit.Operator_NOT_EQUAL
 	} else {
-		qCondition.Operator = querykit.Operator_EQUAL
+		qCondition.Operator = querykit.Operator_IS_EXIST
 	}
 
 	// Processing childs
