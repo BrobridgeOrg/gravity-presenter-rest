@@ -301,6 +301,15 @@ func (endpoint *Endpoint) prepareCondition(ctx *gin.Context, c *Condition) (*Con
 		condition.Value = result.Export()
 	}
 
+	if c.Field != "" {
+		result, err := condition.Runtime.RunString(c.Field)
+		if err != nil {
+			return nil, err
+		} else {
+			condition.Name = result.Export().(string)
+		}
+	}
+
 	// Processing childs
 	for _, child := range c.Conditions {
 		sub, err := endpoint.prepareCondition(ctx, child)

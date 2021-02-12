@@ -6,6 +6,7 @@ import (
 
 type Condition struct {
 	Name       string       `json:"name"`
+	Field      string       `json:"field"`
 	Value      interface{}  `json:"value"`
 	Operator   string       `json:"operator"`
 	Conditions []*Condition `json:"conditions"`
