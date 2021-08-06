@@ -3,7 +3,6 @@ package presenter
 import (
 	"encoding/json"
 	"html/template"
-	//"text/template"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -25,13 +24,13 @@ type EndpointConfig struct {
 }
 
 type QueryConfig struct {
-	//	Conditions map[string]string `json:"conditions"`
-	Condition  *Condition `json:"condition"`
-	Table      string     `json:"table"`
-	Limit      int64      `json:"limit"`
-	Offset     int64      `json:"offset"`
-	OrderBy    string     `json:"orderBy"`
-	Descending bool       `json:"descending"`
+	Condition  *Condition  `json:"condition"`
+	Pagination *Pagination `json:"pagination"`
+	Table      string      `json:"table"`
+	Limit      int64       `json:"limit"`
+	Offset     int64       `json:"offset"`
+	OrderBy    string      `json:"orderBy"`
+	Descending bool        `json:"descending"`
 }
 
 type ResponseConfig struct {
@@ -120,11 +119,35 @@ func (endpoint *Endpoint) loadCondition(queryConfig *QueryConfig, condition *Con
 	return nil
 }
 
+func (endpoint *Endpoint) loadPagination(queryConfig *QueryConfig, pagination *Pagination) error {
+
+	if pagination == nil {
+		return nil
+	}
+
+	// Prepare value script
+	if queryConfig.Pagination.Limit != nil || queryConfig.Pagination.Page != nil {
+		queryConfig.Pagination.InitRuntime()
+	}
+
+	return nil
+}
+
 func (endpoint *Endpoint) loadQuerySettings(queryConfig *QueryConfig) error {
 
 	endpoint.query = queryConfig
+	err := endpoint.loadCondition(queryConfig, queryConfig.Condition)
+	if err != nil {
+		return err
+	}
 
-	return endpoint.loadCondition(queryConfig, queryConfig.Condition)
+	err = endpoint.loadPagination(queryConfig, queryConfig.Pagination)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 func (endpoint *Endpoint) Load(filename string) error {
@@ -323,6 +346,59 @@ func (endpoint *Endpoint) prepareCondition(ctx *gin.Context, c *Condition) (*Con
 	return condition, nil
 }
 
+func (endpoint *Endpoint) preparePagination(ctx *gin.Context, p *Pagination) (*Pagination, error) {
+
+	if p == nil {
+		if endpoint.query.Pagination == nil {
+			return nil, nil
+		}
+
+		p = endpoint.query.Pagination
+	}
+
+	// Prepare a new pagination which is based on template
+	pagination := &Pagination{
+		Limit: p.Limit,
+		Page:  p.Page,
+	}
+
+	pagination.InitRuntime()
+
+	// Prepare environment variable for script
+	querys := make(map[string]string, len(ctx.Request.URL.Query()))
+	for k, v := range ctx.Request.URL.Query() {
+		querys[k] = v[0]
+	}
+	pagination.Runtime.Set("query", querys)
+
+	// Path parameters
+	params := make(map[string]interface{}, len(ctx.Params))
+	for _, p := range ctx.Params {
+		params[p.Key] = p.Value
+	}
+
+	pagination.Runtime.Set("param", params)
+
+	if p.Limit != nil {
+		result, err := pagination.Runtime.RunString(p.Limit.(string))
+		if err != nil {
+			return nil, err
+		} else {
+			pagination.Limit = result.Export()
+		}
+	}
+	if p.Page != nil {
+		result, err := pagination.Runtime.RunString(p.Page.(string))
+		if err != nil {
+			return nil, err
+		} else {
+			pagination.Page = result.Export()
+		}
+	}
+
+	return pagination, nil
+}
+
 func (endpoint *Endpoint) handler(c *gin.Context) {
 
 	condition, err := endpoint.prepareCondition(c, nil)
@@ -332,45 +408,37 @@ func (endpoint *Endpoint) handler(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	/*
-		conditions := make([]Condition, 0, len(endpoint.params))
-		//	parameters := make(map[string]interface{})
 
-		// Getting parameters
-		for name, param := range endpoint.params {
+	// process pagination
+	pagination, err := endpoint.preparePagination(c, nil)
+	if err != nil {
+		log.Error(err)
+		c.Status(http.StatusBadRequest)
+		c.Abort()
+		return
+	}
 
-			condition := Condition{
-				Name:     name,
-				Operator: param.operator,
-			}
-
-			switch param.pType {
-			case VARIABLE_TYPE_QUERYSTRING:
-				condition.Value = c.Query(param.source)
-				//			parameters[name] = c.Query(param.source)
-			case VARIABLE_TYPE_PARAMS:
-				condition.Value = c.Param(param.source)
-				//			parameters[name] = c.Param(param.source)
-			case VARIABLE_TYPE_BODY:
-				val := getValueFromObject(body, param.source)
-				if val == nil {
-					c.Status(http.StatusBadRequest)
-					c.Abort()
-				}
-
-				//			parameters[name] = val
-				condition.Value = val
-			}
-
-			conditions = append(conditions, condition)
+	limit := int64(0)
+	offset := int64(0)
+	if pagination != nil {
+		if l, ok := pagination.Limit.(int64); ok {
+			limit = l
 		}
-	*/
-	// Query
-	//	result, err := endpoint.presenter.queryAdapter.Query(endpoint.table, parameters, &QueryOption{})
+		if p, ok := pagination.Page.(int64); ok {
+			offset = (p - 1) * limit
+		}
+	}
+
+	if endpoint.query.Limit > 0 {
+		limit = endpoint.query.Limit
+	}
+	if endpoint.query.Offset > 0 {
+		offset = endpoint.query.Offset
+	}
 
 	queryOption := QueryOption{
-		Limit:      endpoint.query.Limit,
-		Offset:     endpoint.query.Offset,
+		Limit:      limit,
+		Offset:     offset,
 		OrderBy:    endpoint.query.OrderBy,
 		Descending: endpoint.query.Descending,
 	}

@@ -1,0 +1,27 @@
+{
+	"method": "get",
+	"uri": "/api/pagination",
+	"query": {
+		"table": "users",
+		"orderBy": "id",
+		"descending": false,
+		"pagination": {
+			"page": "parseInt(query.page)",
+			"limit": "parseInt(query.limit)"
+		}
+	},
+	"response": {
+		"state": {
+			"no_results": {
+				"contentType": "application/json",
+				"code": 404,
+				"template": "pagination.no_results.tmpl"
+			},
+			"success": {
+				"contentType": "application/json",
+				"code": 200,
+				"template": "pagination.success.tmpl"
+			}
+		}
+	}
+}
