@@ -2,11 +2,12 @@ package presenter
 
 import (
 	"encoding/json"
-	"html/template"
+	//"html/template"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"

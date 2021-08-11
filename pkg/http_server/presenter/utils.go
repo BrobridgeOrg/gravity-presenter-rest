@@ -45,6 +45,10 @@ func getValueFromObject(obj interface{}, targetPath string) interface{} {
 
 func GetValue(value *querykit.Value) interface{} {
 
+	if value == nil {
+		return nil
+	}
+
 	switch value.Type {
 	case querykit.DataType_FLOAT64:
 		return math.Float64frombits(binary.LittleEndian.Uint64(value.Value))
